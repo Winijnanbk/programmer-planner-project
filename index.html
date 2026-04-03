@@ -119,7 +119,7 @@
   <div class="login-card">
     <div class="login-logo">📋</div>
     <div class="login-title">Bhatara Work Planner</div>
-    <div class="login-sub">ระบบวางแผนงานทีม<br>เข้าสู่ระบบด้วยบัญชี @bhatarapro.com</div>
+    <div class="login-sub">ระบบวางแผนงานทีม<br>เข้าสู่ระบบด้วยบัญชี @bpcdevelop.onmicrosoft.com</div>
     <button class="btn-ms" id="login-btn" onclick="signIn()">
       <svg viewBox="0 0 21 21" fill="none">
         <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
@@ -130,7 +130,7 @@
       เข้าสู่ระบบด้วย Microsoft
     </button>
     <div class="login-error" id="login-error"></div>
-    <div class="login-note">เฉพาะบัญชี @bhatarapro.com เท่านั้น</div>
+    <div class="login-note">เฉพาะบัญชี @bpcdevelop.onmicrosoft.com เท่านั้น</div>
   </div>
 </div>
 
@@ -241,7 +241,7 @@ const msalConfig = {
   },
   cache: {cacheLocation:'sessionStorage'}
 };
-const SCOPES = ['User.Read','Files.ReadWrite.All','Sites.ReadWrite.All'];
+const SCOPES = ['User.Read','Files.ReadWrite'];
 
 let msalInstance, currentUser;
 let _driveId, _itemId;
@@ -261,8 +261,8 @@ async function signIn() {
     await msalInstance.initialize();
     const result = await msalInstance.loginPopup({scopes: SCOPES});
     const email = result.account.username;
-    if (!email.toLowerCase().endsWith('@bhatarapro.com')) {
-      showLoginError('เข้าสู่ระบบได้เฉพาะ @bhatarapro.com\nบัญชีของคุณ: ' + email);
+    if (!email.toLowerCase().endsWith('@bpcdevelop.onmicrosoft.com')) {
+      showLoginError('เข้าสู่ระบบได้เฉพาะ @bpcdevelop.onmicrosoft.com\nบัญชีของคุณ: ' + email);
       return;
     }
     currentUser = {
