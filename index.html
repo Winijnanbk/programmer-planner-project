@@ -222,7 +222,7 @@
 // CONFIG
 // ============================================================
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrSnvPqorTnSqcVOvfYvJA7PPhHZ27mLF5_d3bZQf6q3IkHeLG1R6r8QFezmYFnmW1/exec';
-const SHEET_NAME = 'Planner'; // ชื่อ sheet ใน Google Sheets
+const SHEET_NAME = 'Tasks'; // ชื่อ sheet ใน Google Sheets
 
 const TEAM = [
   {id:'pu',   name:'Pu 😎'},
@@ -237,7 +237,6 @@ const TEAM = [
   {id:'wini', name:'WINIJNAN 🕘'},
   {id:'bes',  name:'BEST 📈'},
 ];
-
 // ============================================================
 // State
 // ============================================================
@@ -292,11 +291,11 @@ function enterApp() {
   localStorage.setItem('planner_user_id', id);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  const initials = person.name.replace(/[^\w\u0E00-\u0E7F]/g,'').slice(0,2).toUpperCase();
   document.getElementById('user-avatar').textContent = person.name[0];
   document.getElementById('user-name').textContent = person.name;
-  loadData();
-  renderWeek();
+  // ถ้ายังไม่มีข้อมูลให้โหลด มิฉะนั้นแค่ render ใหม่
+  if (tasks.length === 0) loadData();
+  else renderWeek();
 }
 
 function switchUser() {
@@ -351,15 +350,24 @@ async function saveData() {
 
 function parseRows(values) {
   if (!values || values.length < 2) return [];
-  return values.slice(1).map((r,i) => ({
-    id:       String(r[0]||i),
-    date:     String(r[1]||''),
-    personId: String(r[2]||''),
-    name:     String(r[3]||''),
-    status:   String(r[4]||'todo'),
-    md:       parseFloat(r[5])||0,
-    note:     String(r[6]||'')
-  })).filter(t=>t.name&&t.date);
+  return values.slice(1).map((r,i) => {
+    // แปลง date ให้เป็น YYYY-MM-DD เสมอ ไม่ว่าจะเก็บแบบไหน
+    let dateStr = String(r[1]||'');
+    if (dateStr.includes('T')) {
+      // ISO format → แปลงเป็น local date
+      const d = new Date(dateStr);
+      dateStr = fmtDate(new Date(d.getTime() + 7*60*60*1000)); // บวก +7 ชั่วโมง
+    }
+    return {
+      id:       String(r[0]||i),
+      date:     dateStr,
+      personId: String(r[2]||''),
+      name:     String(r[3]||''),
+      status:   String(r[4]||'todo'),
+      md:       parseFloat(r[5])||0,
+      note:     String(r[6]||'')
+    };
+  }).filter(t=>t.name&&t.date);
 }
 
 // ============================================================
@@ -373,7 +381,11 @@ function getWeekDates() {
   mon.setHours(0,0,0,0);
   return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return d;});
 }
-function fmtDate(d){return d.toISOString().slice(0,10)}
+function fmtDate(d){
+  // ใช้ local time ไม่ใช่ UTC เพื่อป้องกันวันที่ผิดใน timezone ไทย (+7)
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 const DAYS   = ['จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์','อาทิตย์'];
 const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -494,8 +506,14 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),3000);
 }
 
-// เริ่มต้น
+// เริ่มต้น — โหลดข้อมูลจาก Sheets ทันที แล้ว auto-login ถ้ามีชื่อที่บันทึกไว้
 initLoginScreen();
+loadData().then(() => {
+  const saved = localStorage.getItem('planner_user_id');
+  if (saved && TEAM.find(p=>p.id===saved)) {
+    selectName(saved);
+  }
+});
 </script>
 </body>
 </html>
