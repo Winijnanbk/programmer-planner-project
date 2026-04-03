@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bhatara Work Planner</title>
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@3.28.0/lib/msal-browser.min.js"></script>
+<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <style>
   :root {
     --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f8;--border:#e2e6f0;
@@ -257,7 +257,7 @@ async function signIn() {
   btn.disabled = true;
   errEl.style.display = 'none';
   try {
-    msalInstance = new mslaBrowser.PublicClientApplication(msalConfig);
+    msalInstance = new msal.PublicClientApplication(msalConfig);
     await msalInstance.initialize();
     const result = await msalInstance.loginPopup({scopes: SCOPES});
     const email = result.account.username;
