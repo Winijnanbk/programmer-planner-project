@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bhatara Work Planner</title>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --surface: #ffffff;
+    --surface2: #f0f2f8;
+    --border: #e2e6f0;
+    --text: #1a1d2e;
+    --text2: #5a6080;
+    --text3: #9198b5;
+    --accent: #2563eb;
+    --accent-light: #eff4ff;
+    --accent-hover: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #f0fdf4;
+    --amber: #d97706;
+    --amber-light: #fffbeb;
+    --red: #dc2626;
+    --red-light: #fef2f2;
+    --purple: #7c3aed;
+    --purple-light: #f5f3ff;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* ---- Login ---- */
+  #login-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #2563eb 100%);
+  }
+  .login-card {
+    background: var(--surface); border-radius: 16px; padding: 48px 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; max-width: 380px; width: 90%;
+  }
+  .login-logo { font-size: 36px; margin-bottom: 12px; }
+  .login-title { font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .login-sub { color: var(--text2); font-size: 13px; margin-bottom: 32px; line-height: 1.6; }
+  .btn-ms {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 13px 20px; border-radius: var(--radius);
+    background: #2563eb; color: #fff; font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; transition: background 0.15s;
+  }
+  .btn-ms:hover { background: var(--accent-hover); }
+  .btn-ms svg { width: 20px; height: 20px; }
+  .login-note { margin-top: 20px; font-size: 12px; color: var(--text3); }
+
+  /* ---- App shell ---- */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+  .topbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 20px; height: 56px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 12px; }
+  .topbar-logo { font-size: 20px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+  .topbar-sub { font-size: 12px; color: var(--text3); font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border-radius: 20px; padding: 5px 12px 5px 5px;
+  }
+  .user-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff; display: flex; align-items: center;
+    justify-content: center; font-size: 11px; font-weight: 700;
+  }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); }
+  .btn-logout {
+    background: none; border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 5px 12px; font-size: 12px; color: var(--text2); cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-logout:hover { background: var(--red-light); border-color: var(--red); color: var(--red); }
+
+  /* ---- Toolbar ---- */
+  .toolbar {
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 10px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .toolbar-label { font-size: 12px; font-weight: 600; color: var(--text2); }
+  .week-nav { display: flex; align-items: center; gap: 6px; }
+  .btn-nav {
+    width: 30px; height: 30px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: var(--text2); transition: all 0.15s;
+  }
+  .btn-nav:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .week-label {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    min-width: 150px; text-align: center;
+  }
+  .btn-today {
+    padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--accent); background: var(--accent-light);
+    color: var(--accent); font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-today:hover { background: var(--accent); color: #fff; }
+  .toolbar-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+  .btn-add-task {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff;
+    border: none; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-add-task:hover { background: var(--accent-hover); }
+  .sync-status {
+    font-size: 11px; color: var(--text3);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ---- Planner grid ---- */
+  .planner-wrap { overflow-x: auto; padding: 16px 20px 80px; }
+  .planner-grid {
+    display: grid;
+    min-width: 900px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .grid-header-row {
+    display: grid;
+    background: #1e3a8a;
+  }
+  .col-date { width: 110px; min-width: 110px; }
+  .col-task { flex: 1; min-width: 120px; }
+
+  .gh-cell {
+    padding: 10px 12px; color: #fff; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.4px; text-transform: uppercase; text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.1);
+  }
+  .gh-cell:last-child { border-right: none; }
+  .gh-cell.date-col { text-align: left; }
+
+  /* Day rows */
+  .day-row {
+    display: grid; background: var(--surface);
+    border-top: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .day-row.weekend { background: #fafbff; }
+  .day-row.today { background: var(--accent-light); }
+  .day-row.holiday { background: #fffef5; }
+
+  .date-cell {
+    padding: 10px 12px; border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; justify-content: center;
+    min-height: 52px; width: 110px; min-width: 110px;
+  }
+  .date-num {
+    font-size: 18px; font-weight: 800; line-height: 1;
+    color: var(--text);
+  }
+  .today .date-num { color: var(--accent); }
+  .weekend .date-num { color: var(--text2); }
+  .date-day { font-size: 10px; font-weight: 600; color: var(--text3); margin-top: 2px; text-transform: uppercase; }
+  .today-badge {
+    font-size: 9px; font-weight: 700; background: var(--accent);
+    color: #fff; padding: 1px 5px; border-radius: 10px; margin-top: 3px;
+    width: fit-content;
+  }
+
+  .person-cell {
+    padding: 6px 8px; border-right: 1px solid var(--border);
+    min-height: 52px; display: flex; flex-direction: column;
+    gap: 3px; cursor: pointer; transition: background 0.1s;
+  }
+  .person-cell:last-child { border-right: none; }
+  .person-cell:hover { background: var(--accent-light); }
+  .person-cell.mine { background: #f0fdf8; }
+  .person-cell.mine:hover { background: #dcfce7; }
+
+  /* Task chips */
+  .task-chip {
+    display: flex; align-items: flex-start; gap: 4px;
+    background: var(--surface2); border-radius: 5px;
+    padding: 4px 6px; font-size: 11px; line-height: 1.4;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.1s; position: relative;
+  }
+  .task-chip:hover { border-color: var(--accent); background: var(--accent-light); }
+  .task-chip.status-done { background: var(--green-light); border-color: #86efac; }
+  .task-chip.status-inprogress { background: var(--amber-light); border-color: #fcd34d; }
+  .task-chip.status-blocked { background: var(--red-light); border-color: #fca5a5; }
+  .task-chip.status-todo { background: var(--surface2); }
+  .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+  .status-done .chip-dot { background: var(--green); }
+  .status-inprogress .chip-dot { background: var(--amber); }
+  .status-blocked .chip-dot { background: var(--red); }
+  .status-todo .chip-dot { background: var(--text3); }
+  .chip-name { flex: 1; color: var(--text); font-weight: 500; word-break: break-word; }
+  .chip-md { font-size: 10px; color: var(--text3); white-space: nowrap; margin-top: 1px; }
+  .add-btn {
+    font-size: 11px; color: var(--text3); padding: 3px 5px;
+    border-radius: 4px; border: 1px dashed var(--border);
+    text-align: center; transition: all 0.1s; cursor: pointer;
+    background: transparent;
+  }
+  .add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  /* Weekend / holiday overlay */
+  .day-label-overlay {
+    padding: 8px 12px; font-size: 11px; color: var(--text3);
+    font-style: italic; align-self: center;
+  }
+
+  /* ---- Modal ---- */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 200;
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 14px;
+    padding: 28px; width: 90%; max-width: 460px;
+    box-shadow: var(--shadow-md); position: relative;
+  }
+  .modal-title { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+  .form-group { margin-bottom: 14px; }
+  .form-label { font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 5px; display: block; }
+  .form-input, .form-select, .form-textarea {
+    width: 100%; padding: 9px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); font-size: 13px; color: var(--text);
+    background: var(--surface); font-family: inherit;
+    transition: border-color 0.15s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+  }
+  .form-textarea { resize: vertical; min-height: 60px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel {
+    padding: 8px 18px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 13px; color: var(--text2); cursor: pointer;
+  }
+  .btn-cancel:hover { background: var(--surface2); }
+  .btn-save {
+    padding: 8px 20px; border-radius: var(--radius-sm);
+    background: var(--accent); color: #fff;
+    border: none; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-save:hover { background: var(--accent-hover); }
+  .btn-delete {
+    padding: 8px 16px; border-radius: var(--radius-sm);
+    background: var(--red-light); color: var(--red);
+    border: 1px solid #fca5a5; font-size: 13px; cursor: pointer;
+    margin-right: auto;
+  }
+  .btn-delete:hover { background: var(--red); color: #fff; }
+
+  /* ---- Status legend ---- */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    padding: 10px 20px; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* ---- Setup guide ---- */
+  #setup-guide {
+    background: var(--amber-light); border: 1px solid #fcd34d;
+    border-radius: var(--radius); padding: 14px 16px; margin: 16px 20px 0;
+    font-size: 12px; line-height: 1.7;
+  }
+  #setup-guide strong { color: var(--amber); }
+  #setup-guide code { background: #fff; padding: 1px 5px; border-radius: 3px; font-size: 11px; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: #1e3a8a; color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; z-index: 999; opacity: 0; transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">📋</div>
+    <div class="login-title">Bhatara Work Planner</div>
+    <div class="login-sub">ระบบวางแผนงานทีม<br>เข้าสู่ระบบด้วยบัญชี @bhatarapro.com</div>
+    <button class="btn-ms" onclick="signIn()">
+      <svg viewBox="0 0 21 21" fill="none">
+        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+      </svg>
+      เข้าสู่ระบบด้วย Microsoft
+    </button>
+    <div class="login-note">เฉพาะบัญชี @bhatarapro.com เท่านั้น</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">📋 Bhatara Planner</div>
+      <div class="topbar-sub" id="topbar-month"></div>
+    </div>
+    <div class="topbar-right">
+      <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">พร้อมใช้งาน</span></div>
+      <div class="user-chip">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-name" id="user-name">loading...</div>
+      </div>
+      <button class="btn-logout" onclick="signOut()">ออกจากระบบ</button>
+    </div>
+  </div>
+
+  <div id="setup-guide">
+    <strong>⚙️ Setup ที่ต้องทำก่อนใช้งานจริง:</strong> แก้ไขค่า <code>CLIENT_ID</code> และ <code>EXCEL_FILE_ID</code> ใน config ด้านบนของ JS
+    → <a href="SETUP.md" target="_blank">ดูคู่มือ setup ทีละขั้น</a>
+  </div>
+
+  <div class="toolbar">
+    <div class="week-nav">
+      <button class="btn-nav" onclick="prevWeek()">‹</button>
+      <div class="week-label" id="week-label">สัปดาห์ที่ ...</div>
+      <button class="btn-nav" onclick="nextWeek()">›</button>
+    </div>
+    <button class="btn-today" onclick="goToday()">วันนี้</button>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#9198b5"></div>To Do</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d97706"></div>In Progress</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#16a34a"></div>Done</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#dc2626"></div>Blocked</div>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn-add-task" onclick="openAddModal()">+ เพิ่มงาน</button>
+    </div>
+  </div>
+
+  <div class="planner-wrap">
+    <div class="planner-grid" id="planner-grid"></div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-backdrop" id="task-modal">
+  <div class="modal">
+    <div class="modal-title" id="modal-title">เพิ่มงานใหม่</div>
+    <div class="modal-sub" id="modal-sub">วันที่ ... | ...</div>
+    <div class="form-group">
+      <label class="form-label">ชื่องาน / Project *</label>
+      <input class="form-input" id="f-name" placeholder="เช่น KTC_Assignment..." />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">สถานะ</label>
+        <select class="form-select" id="f-status">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="done">Done</option>
+          <option value="blocked">Blocked</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">MD (จำนวนวัน)</label>
+        <input class="form-input" id="f-md" type="number" min="0.1" max="30" step="0.25" placeholder="0.5" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">หมายเหตุ / Note</label>
+      <textarea class="form-textarea" id="f-note" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-delete" id="btn-delete" onclick="deleteTask()" style="display:none">ลบงาน</button>
+      <button class="btn-cancel" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn-save" onclick="saveTask()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — แก้ค่าเหล่านี้ก่อนใช้งานจริง
+// ============================================================
+const CONFIG = {
+  CLIENT_ID: 'YOUR_CLIENT_ID_HERE',           // จาก Azure App Registration
+  TENANT_ID: 'bhatarapro.com',                // domain บริษัท
+  EXCEL_FILE_ID: 'YOUR_ONEDRIVE_FILE_ID',     // ID ของไฟล์ Excel ใน OneDrive
+  SHEET_NAME: 'Tasks',                        // ชื่อ sheet ใน Excel
+  REDIRECT_URI: window.location.origin,
+};
+
+// ชื่อทีม (ดึงจาก Excel จริงๆ ในการใช้งานจริง)
+const TEAM = [
+  { id: 'pu',      name: 'Pu 😎' },
+  { id: 'le',      name: 'Le 😑' },
+  { id: 'dan',     name: 'Dan 🥸' },
+  { id: 'ae',      name: 'เอ 🅰️' },
+  { id: 'boss',    name: 'บอส 🅱️' },
+  { id: 'drop',    name: 'Drop 💧' },
+  { id: 'oo',      name: 'อู๋ 🪙' },
+  { id: 'bas',     name: 'บาส ⛹️' },
+  { id: 'aim',     name: 'อั้ม 🩺' },
+  { id: 'wini',    name: 'วินิจนันท์ 🕘' },
+  { id: 'bes',     name: 'เบส 📈' },
+];
+
+// ============================================================
+// MSAL Setup
+// ============================================================
+const msalConfig = {
+  auth: {
+    clientId: CONFIG.CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${CONFIG.TENANT_ID}`,
+    redirectUri: CONFIG.REDIRECT_URI,
+  },
+  cache: { cacheLocation: 'sessionStorage' }
+};
+const scopes = ['User.Read', 'Files.ReadWrite'];
+
+let msalInstance, currentUser, currentToken;
+
+// Demo mode (ใช้งานได้ก่อน setup Microsoft จริงๆ)
+const DEMO_MODE = CONFIG.CLIENT_ID === 'YOUR_CLIENT_ID_HERE';
+
+// ============================================================
+// State
+// ============================================================
+let tasks = [];   // { id, date, personId, name, status, md, note }
+let editingTask = null;
+let modalContext = { date: null, personId: null };
+let weekOffset = 0;
+
+// ============================================================
+// Auth
+// ============================================================
+async function signIn() {
+  if (DEMO_MODE) {
+    // Demo: login ด้วยชื่อ Pu
+    currentUser = { name: 'Pu (Demo)', email: 'pu@bhatarapro.com', id: 'pu' };
+    startApp();
+    return;
+  }
+  try {
+    msalInstance = new msal.PublicClientApplication(msalConfig);
+    await msalInstance.initialize();
+    const result = await msalInstance.loginPopup({ scopes });
+    const email = result.account.username;
+    if (!email.endsWith('@bhatarapro.com')) {
+      alert('เข้าสู่ระบบได้เฉพาะบัญชี @bhatarapro.com เท่านั้น');
+      return;
+    }
+    currentUser = {
+      name: result.account.name,
+      email,
+      id: email.split('@')[0].toLowerCase()
+    };
+    currentToken = result.accessToken;
+    startApp();
+  } catch(e) {
+    console.error(e);
+    alert('Login ไม่สำเร็จ: ' + e.message);
+  }
+}
+
+function signOut() {
+  if (!DEMO_MODE && msalInstance) msalInstance.logoutPopup();
+  location.reload();
+}
+
+// ============================================================
+// App Init
+// ============================================================
+function startApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('user-name').textContent = currentUser.name;
+
+  if (DEMO_MODE) {
+    loadDemoData();
+    document.getElementById('setup-guide').style.display = 'block';
+  } else {
+    loadFromExcel();
+  }
+  renderWeek();
+}
+
+// ============================================================
+// Demo Data
+// ============================================================
+function loadDemoData() {
+  const today = new Date();
+  const fmt = d => d.toISOString().slice(0,10);
+  const d = (offset) => {
+    const x = new Date(today); x.setDate(x.getDate()+offset); return fmt(x);
+  };
+  tasks = [
+    { id:'1', date:d(0),  personId:'pu',   name:'KTC_Assignment Clear field', status:'inprogress', md:1, note:'ต่อจากวานนี้' },
+    { id:'2', date:d(0),  personId:'pu',   name:'BPC Power app purchase', status:'todo', md:0.5, note:'' },
+    { id:'3', date:d(0),  personId:'le',   name:'Big Star F3 RP', status:'done', md:1, note:'เสร็จแล้ว' },
+    { id:'4', date:d(1),  personId:'pu',   name:'AGR Meeting estimate', status:'todo', md:0.5, note:'' },
+    { id:'5', date:d(1),  personId:'dan',  name:'THR Rework Assignment', status:'inprogress', md:2, note:'' },
+    { id:'6', date:d(-1), personId:'ae',   name:'BSCM PU01 Auto', status:'blocked', md:1, note:'รอ UAT' },
+    { id:'7', date:d(2),  personId:'oo',   name:'RCOF Summary assigned', status:'todo', md:1, note:'' },
+    { id:'8', date:d(0),  personId:'aim',  name:'FCI Vendor account', status:'inprogress', md:0.5, note:'' },
+    { id:'9', date:d(0),  personId:'aim',  name:'BEVPRO MA Issue', status:'todo', md:0.25, note:'รอข้อมูลจาก client' },
+  ];
+}
+
+// ============================================================
+// Excel/OneDrive API
+// ============================================================
+async function getToken() {
+  if (DEMO_MODE) return null;
+  const result = await msalInstance.acquireTokenSilent({ scopes, account: msalInstance.getAllAccounts()[0] });
+  return result.accessToken;
+}
+
+async function loadFromExcel() {
+  setSyncing(true);
+  try {
+    const token = await getToken();
+    const url = `https://graph.microsoft.com/v1.0/me/drive/items/${CONFIG.EXCEL_FILE_ID}/workbook/worksheets/${CONFIG.SHEET_NAME}/usedRange`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    tasks = parseExcelRows(data.values);
+    renderWeek();
+  } catch(e) {
+    console.error(e);
+    showToast('โหลดข้อมูลไม่สำเร็จ');
+  }
+  setSyncing(false);
+}
+
+function parseExcelRows(values) {
+  if (!values || values.length < 2) return [];
+  return values.slice(1).map((row,i) => ({
+    id: row[0] || String(i),
+    date: row[1], personId: row[2],
+    name: row[3], status: row[4] || 'todo',
+    md: parseFloat(row[5]) || 0, note: row[6] || ''
+  })).filter(t => t.name);
+}
+
+async function saveToExcel() {
+  if (DEMO_MODE) { showToast('บันทึกแล้ว (Demo mode)'); return; }
+  setSyncing(true);
+  try {
+    const token = await getToken();
+    const headers = [['id','date','personId','name','status','md','note']];
+    const rows = tasks.map(t => [t.id, t.date, t.personId, t.name, t.status, t.md, t.note]);
+    const values = [...headers, ...rows];
+    const url = `https://graph.microsoft.com/v1.0/me/drive/items/${CONFIG.EXCEL_FILE_ID}/workbook/worksheets/${CONFIG.SHEET_NAME}/range(address='A1:G${values.length}')`;
+    await fetch(url, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ values })
+    });
+    showToast('บันทึกลง Excel แล้ว');
+  } catch(e) {
+    showToast('บันทึกไม่สำเร็จ');
+  }
+  setSyncing(false);
+}
+
+// ============================================================
+// Render
+// ============================================================
+function getWeekDates() {
+  const today = new Date();
+  const monday = new Date(today);
+  const dow = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  monday.setDate(today.getDate() - dow + (weekOffset * 7));
+  monday.setHours(0,0,0,0);
+  return Array.from({length: 7}, (_,i) => {
+    const d = new Date(monday); d.setDate(monday.getDate() + i); return d;
+  });
+}
+
+function fmtDate(d) { return d.toISOString().slice(0,10); }
+const DAYS_TH = ['จ','อ','พ','พฤ','ศ','ส','อา'];
+const DAYS_FULL = ['จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์','อาทิตย์'];
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+
+function renderWeek() {
+  const dates = getWeekDates();
+  const today = fmtDate(new Date());
+
+  // Update labels
+  const m1 = dates[0], m2 = dates[6];
+  document.getElementById('week-label').textContent =
+    `${m1.getDate()} ${MONTHS_TH[m1.getMonth()]} – ${m2.getDate()} ${MONTHS_TH[m2.getMonth()]} ${m1.getFullYear()+543}`;
+  document.getElementById('topbar-month').textContent =
+    `${MONTHS_TH[m1.getMonth()]} ${m1.getFullYear()+543}`;
+
+  const grid = document.getElementById('planner-grid');
+  const colCount = 1 + TEAM.length;
+  const colTemplate = `110px repeat(${TEAM.length}, 1fr)`;
+
+  // Header
+  let html = `<div class="grid-header-row" style="grid-template-columns:${colTemplate}">`;
+  html += `<div class="gh-cell date-col">วัน</div>`;
+  TEAM.forEach(p => {
+    html += `<div class="gh-cell">${p.name}</div>`;
+  });
+  html += `</div>`;
+
+  // Rows
+  dates.forEach(date => {
+    const dateStr = fmtDate(date);
+    const isToday = dateStr === today;
+    const dow = date.getDay();
+    const isWeekend = dow === 0 || dow === 6;
+    const dayIdx = dow === 0 ? 6 : dow - 1;
+
+    let rowClass = 'day-row';
+    if (isToday) rowClass += ' today';
+    else if (isWeekend) rowClass += ' weekend';
+
+    html += `<div class="${rowClass}" style="grid-template-columns:${colTemplate}">`;
+
+    // Date cell
+    html += `<div class="date-cell">
+      <div class="date-num">${date.getDate()}</div>
+      <div class="date-day">${DAYS_FULL[dayIdx]}</div>
+      ${isToday ? '<div class="today-badge">วันนี้</div>' : ''}
+    </div>`;
+
+    if (isWeekend) {
+      TEAM.forEach(() => {
+        html += `<div class="person-cell" style="justify-content:center;align-items:center;">
+          <span style="font-size:10px;color:var(--text3)">หยุด</span></div>`;
+      });
+    } else {
+      TEAM.forEach(person => {
+        const isMine = person.id === currentUser?.id;
+        const dayTasks = tasks.filter(t => t.date === dateStr && t.personId === person.id);
+        html += `<div class="person-cell${isMine?' mine':''}" onclick="openAddModal('${dateStr}','${person.id}')">`;
+        dayTasks.forEach(task => {
+          html += `<div class="task-chip status-${task.status}" onclick="event.stopPropagation();openEditModal('${task.id}')">
+            <div class="chip-dot"></div>
+            <div style="flex:1">
+              <div class="chip-name">${escHtml(task.name)}</div>
+              ${task.md ? `<div class="chip-md">${task.md} MD${task.note ? ' · '+escHtml(task.note.slice(0,20)) : ''}</div>` : ''}
+            </div>
+          </div>`;
+        });
+        html += `<div class="add-btn">+ เพิ่ม</div></div>`;
+      });
+    }
+    html += `</div>`;
+  });
+
+  grid.innerHTML = html;
+}
+
+// ============================================================
+// Modal
+// ============================================================
+function openAddModal(dateStr, personId) {
+  if (!dateStr) {
+    // toolbar button — default to today + current user
+    dateStr = fmtDate(new Date());
+    personId = currentUser?.id || TEAM[0].id;
+  }
+  editingTask = null;
+  modalContext = { date: dateStr, personId };
+  const person = TEAM.find(p => p.id === personId);
+  const d = new Date(dateStr);
+  document.getElementById('modal-title').textContent = 'เพิ่มงานใหม่';
+  document.getElementById('modal-sub').textContent =
+    `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543} | ${person?.name || personId}`;
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-status').value = 'todo';
+  document.getElementById('f-md').value = '';
+  document.getElementById('f-note').value = '';
+  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('task-modal').classList.add('open');
+  setTimeout(() => document.getElementById('f-name').focus(), 100);
+}
+
+function openEditModal(taskId) {
+  const task = tasks.find(t => t.id === taskId);
+  if (!task) return;
+  editingTask = task;
+  modalContext = { date: task.date, personId: task.personId };
+  const person = TEAM.find(p => p.id === task.personId);
+  const d = new Date(task.date);
+  document.getElementById('modal-title').textContent = 'แก้ไขงาน';
+  document.getElementById('modal-sub').textContent =
+    `${d.getDate()} ${MONTHS_TH[d.getMonth()]} ${d.getFullYear()+543} | ${person?.name || task.personId}`;
+  document.getElementById('f-name').value = task.name;
+  document.getElementById('f-status').value = task.status;
+  document.getElementById('f-md').value = task.md || '';
+  document.getElementById('f-note').value = task.note || '';
+  document.getElementById('btn-delete').style.display = 'block';
+  document.getElementById('task-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('task-modal').classList.remove('open');
+}
+
+function saveTask() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { document.getElementById('f-name').focus(); return; }
+  const taskData = {
+    date: modalContext.date,
+    personId: modalContext.personId,
+    name,
+    status: document.getElementById('f-status').value,
+    md: parseFloat(document.getElementById('f-md').value) || 0,
+    note: document.getElementById('f-note').value.trim(),
+  };
+  if (editingTask) {
+    Object.assign(editingTask, taskData);
+  } else {
+    tasks.push({ id: Date.now().toString(), ...taskData });
+  }
+  closeModal();
+  renderWeek();
+  saveToExcel();
+}
+
+function deleteTask() {
+  if (!editingTask) return;
+  tasks = tasks.filter(t => t.id !== editingTask.id);
+  closeModal();
+  renderWeek();
+  saveToExcel();
+}
+
+// ============================================================
+// Week navigation
+// ============================================================
+function prevWeek() { weekOffset--; renderWeek(); }
+function nextWeek() { weekOffset++; renderWeek(); }
+function goToday() { weekOffset = 0; renderWeek(); }
+
+// Close modal on backdrop click
+document.getElementById('task-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ============================================================
+// Helpers
+// ============================================================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function setSyncing(on) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-label');
+  if (on) { dot.classList.add('syncing'); lbl.textContent = 'กำลังซิงค์...'; }
+  else { dot.classList.remove('syncing'); lbl.textContent = 'พร้อมใช้งาน'; }
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
