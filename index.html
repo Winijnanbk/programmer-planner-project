@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bhatara Work Planner</title>
-<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 <style>
   :root {
     --bg:#f5f6fa;--surface:#fff;--surface2:#f0f2f8;--border:#e2e6f0;
@@ -19,30 +18,35 @@
   *{box-sizing:border-box;margin:0;padding:0}
   body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
 
+  /* Login */
   #login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a,#1d4ed8,#2563eb)}
-  .login-card{background:var(--surface);border-radius:16px;padding:48px 40px;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;max-width:380px;width:90%}
-  .login-logo{font-size:36px;margin-bottom:12px}
+  .login-card{background:var(--surface);border-radius:16px;padding:48px 40px;box-shadow:0 20px 60px rgba(0,0,0,0.2);text-align:center;max-width:400px;width:90%}
+  .login-logo{font-size:40px;margin-bottom:16px}
   .login-title{font-size:22px;font-weight:700;margin-bottom:6px}
-  .login-sub{color:var(--text2);font-size:13px;margin-bottom:32px;line-height:1.6}
-  .btn-ms{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px 20px;border-radius:var(--radius);background:#2563eb;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:background 0.15s}
-  .btn-ms:hover{background:var(--accent-hover)}
-  .btn-ms:disabled{opacity:0.6;cursor:not-allowed}
-  .btn-ms svg{width:20px;height:20px;flex-shrink:0}
-  .login-note{margin-top:16px;font-size:12px;color:var(--text3)}
-  .login-error{margin-top:12px;padding:10px 14px;border-radius:var(--radius-sm);background:var(--red-light);color:var(--red);font-size:12px;display:none;text-align:left;line-height:1.5;white-space:pre-line}
+  .login-sub{color:var(--text2);font-size:13px;margin-bottom:28px;line-height:1.6}
+  .name-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+  .name-btn{padding:10px 8px;border-radius:var(--radius-sm);border:2px solid var(--border);background:var(--surface);font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;color:var(--text)}
+  .name-btn:hover{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}
+  .name-btn.selected{border-color:var(--accent);background:var(--accent);color:#fff}
+  .login-divider{color:var(--text3);font-size:12px;margin:12px 0;position:relative}
+  .login-divider::before,.login-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--border)}
+  .login-divider::before{left:0}.login-divider::after{right:0}
+  .btn-enter{width:100%;padding:12px;border-radius:var(--radius);background:var(--accent);color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;transition:background 0.15s;margin-top:4px}
+  .btn-enter:hover{background:var(--accent-hover)}
+  .btn-enter:disabled{opacity:0.4;cursor:not-allowed}
 
+  /* App */
   #app{display:none;flex-direction:column;min-height:100vh}
   .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:var(--shadow)}
   .topbar-left{display:flex;align-items:center;gap:12px}
-  .topbar-logo{font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-0.5px}
+  .topbar-logo{font-size:18px;font-weight:800;color:var(--accent)}
   .topbar-sub{font-size:12px;color:var(--text3);font-weight:500}
   .topbar-right{display:flex;align-items:center;gap:12px}
   .user-chip{display:flex;align-items:center;gap:8px;background:var(--surface2);border-radius:20px;padding:5px 12px 5px 5px}
   .user-avatar{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
   .user-name{font-size:13px;font-weight:500}
-  .btn-logout{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s}
-  .btn-logout:hover{background:var(--red-light);border-color:var(--red);color:var(--red)}
-
+  .btn-switch{background:none;border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:all 0.15s}
+  .btn-switch:hover{background:var(--accent-light);border-color:var(--accent);color:var(--accent)}
   .toolbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .week-nav{display:flex;align-items:center;gap:6px}
   .btn-nav{width:30px;height:30px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2);transition:all 0.15s}
@@ -57,10 +61,11 @@
   .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
   .sync-dot.syncing{background:var(--amber);animation:pulse 1s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-  .legend{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .legend{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
   .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
   .legend-dot{width:8px;height:8px;border-radius:50%}
 
+  /* Grid */
   .planner-wrap{overflow-x:auto;padding:16px 20px 80px}
   .planner-grid{display:grid;min-width:900px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:var(--shadow)}
   .grid-header-row{display:grid;background:#1e3a8a}
@@ -96,6 +101,7 @@
   .add-btn{font-size:11px;color:var(--text3);padding:3px 5px;border-radius:4px;border:1px dashed var(--border);text-align:center;transition:all 0.1s;cursor:pointer;background:transparent}
   .add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
 
+  /* Modal */
   .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;align-items:center;justify-content:center}
   .modal-backdrop.open{display:flex}
   .modal{background:var(--surface);border-radius:14px;padding:28px;width:90%;max-width:460px;box-shadow:var(--shadow-md)}
@@ -121,25 +127,22 @@
 </head>
 <body>
 
+<!-- หน้าเลือกชื่อ -->
 <div id="login-screen">
   <div class="login-card">
     <div class="login-logo">📋</div>
     <div class="login-title">Bhatara Work Planner</div>
-    <div class="login-sub">ระบบวางแผนงานทีม<br>เข้าสู่ระบบด้วยบัญชี Microsoft</div>
-    <button class="btn-ms" id="login-btn" onclick="signIn()">
-      <svg viewBox="0 0 21 21" fill="none">
-        <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-        <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-        <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-        <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-      </svg>
-      เข้าสู่ระบบด้วย Microsoft
-    </button>
-    <div class="login-error" id="login-error"></div>
-    <div class="login-note">เฉพาะบัญชี @bpcdevelop.onmicrosoft.com เท่านั้น</div>
+    <div class="login-sub">เลือกชื่อของคุณเพื่อเริ่มใช้งาน</div>
+    <div class="name-grid" id="name-grid"></div>
+    <div class="login-divider">หรือ</div>
+    <select class="form-select" id="name-select" style="margin-bottom:12px">
+      <option value="">— เลือกจากรายการ —</option>
+    </select>
+    <button class="btn-enter" id="btn-enter" onclick="enterApp()" disabled>เข้าสู่ระบบ →</button>
   </div>
 </div>
 
+<!-- แอปหลัก -->
 <div id="app">
   <div class="topbar">
     <div class="topbar-left">
@@ -150,9 +153,9 @@
       <div class="sync-status"><div class="sync-dot" id="sync-dot"></div><span id="sync-label">พร้อมใช้งาน</span></div>
       <div class="user-chip">
         <div class="user-avatar" id="user-avatar">?</div>
-        <div class="user-name" id="user-name">loading...</div>
+        <div class="user-name" id="user-name">...</div>
       </div>
-      <button class="btn-logout" onclick="signOut()">ออกจากระบบ</button>
+      <button class="btn-switch" onclick="switchUser()">เปลี่ยนชื่อ</button>
     </div>
   </div>
   <div class="toolbar">
@@ -177,6 +180,7 @@
   </div>
 </div>
 
+<!-- Modal -->
 <div class="modal-backdrop" id="task-modal">
   <div class="modal">
     <div class="modal-title" id="modal-title">เพิ่มงานใหม่</div>
@@ -217,20 +221,8 @@
 // ============================================================
 // CONFIG
 // ============================================================
-const CONFIG = {
-  // Microsoft login
-  CLIENT_ID:   '19e2132f-c104-4e1a-a4a3-abcdcd57c891',
-  TENANT_ID:   '01107267-7216-4cc7-a3a5-fc0455705585',
-  REDIRECT_URI: 'https://winijnanbk.github.io/programmer-planner-project/',
-  ALLOWED_DOMAIN: 'bpcdevelop.onmicrosoft.com',
-
-  // Google Sheets
-  SHEET_ID:   '1JO2ci2372AZaPnlicQisXHguqAXJWm-x8uVEA8r51BY',
-  SHEET_NAME: 'Planner',
-  // ⚠️ ใส่ Apps Script Web App URL หลัง deploy
-  // ถ้ายังไม่มี ระบบจะใช้ Demo mode อัตโนมัติ
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzp2ohGwuJmjnC2cR1PL7ScSAUJRJ6QzUdEEhhDrcS4uEz-wXet9HIGSTIHbV0eMIxd/exec',
-};
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzp2ohGwuJmjnC2cR1PL7ScSAUJRJ6QzUdEEhhDrcS4uEz-wXet9HIGSTIHbV0eMIxd/exec';
+const SHEET_NAME = 'Tasks'; // ชื่อ sheet ใน Google Sheets
 
 const TEAM = [
   {id:'pu',   name:'Pu 😎'},
@@ -247,124 +239,109 @@ const TEAM = [
 ];
 
 // ============================================================
-// MSAL (Microsoft Login)
+// State
 // ============================================================
-const msalConfig = {
-  auth: {
-    clientId: CONFIG.CLIENT_ID,
-    authority: `https://login.microsoftonline.com/${CONFIG.TENANT_ID}`,
-    redirectUri: CONFIG.REDIRECT_URI,
-  },
-  cache: {cacheLocation:'sessionStorage'}
-};
-const MS_SCOPES = ['User.Read'];
-
-let msalInstance, currentUser;
+let currentUser = null;
 let tasks = [], editingTask = null;
 let modalContext = {date:null, personId:null};
 let weekOffset = 0;
-const DEMO_MODE = !CONFIG.APPS_SCRIPT_URL;
-
-// ---- Sign In ----
-async function signIn() {
-  const btn = document.getElementById('login-btn');
-  const errEl = document.getElementById('login-error');
-  btn.textContent = 'กำลังเข้าสู่ระบบ...';
-  btn.disabled = true;
-  errEl.style.display = 'none';
-
-  try {
-    msalInstance = new msal.PublicClientApplication(msalConfig);
-    await msalInstance.initialize();
-    const result = await msalInstance.loginPopup({scopes: MS_SCOPES});
-    const email = result.account.username.toLowerCase();
-
-    if (!email.endsWith('@' + CONFIG.ALLOWED_DOMAIN)) {
-      showLoginError(`เข้าสู่ระบบได้เฉพาะ @${CONFIG.ALLOWED_DOMAIN}\nบัญชีของคุณ: ${email}`);
-      return;
-    }
-    currentUser = {
-      name: result.account.name,
-      email,
-      id: email.split('@')[0].replace(/[^a-z0-9]/g,'')
-    };
-    startApp();
-  } catch(e) {
-    console.error(e);
-    const msg = e.errorCode === 'user_cancelled' ? 'ยกเลิกการเข้าสู่ระบบ'
-      : e.errorCode === 'popup_window_error' ? 'กรุณาอนุญาต popup สำหรับเว็บนี้'
-      : 'เกิดข้อผิดพลาด: ' + (e.message || e.errorCode || e);
-    showLoginError(msg);
-  } finally {
-    btn.innerHTML = `<svg viewBox="0 0 21 21" fill="none" style="width:20px;height:20px;flex-shrink:0">
-      <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
-      <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
-      <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
-      <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
-    </svg>เข้าสู่ระบบด้วย Microsoft`;
-    btn.disabled = false;
-  }
-}
-
-function showLoginError(msg) {
-  const el = document.getElementById('login-error');
-  el.textContent = msg; el.style.display = 'block';
-}
-
-function signOut() {
-  if (msalInstance) msalInstance.logoutPopup();
-  location.reload();
-}
 
 // ============================================================
-// App Init
+// หน้าเลือกชื่อ
 // ============================================================
-function startApp() {
+function initLoginScreen() {
+  const grid = document.getElementById('name-grid');
+  const sel  = document.getElementById('name-select');
+
+  TEAM.forEach(p => {
+    // ปุ่มกด
+    const btn = document.createElement('button');
+    btn.className = 'name-btn';
+    btn.textContent = p.name;
+    btn.dataset.id = p.id;
+    btn.onclick = () => selectName(p.id);
+    grid.appendChild(btn);
+
+    // dropdown backup
+    const opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.name;
+    sel.appendChild(opt);
+  });
+
+  sel.onchange = () => { if(sel.value) selectName(sel.value); };
+
+  // ดึงชื่อที่เคยเลือกไว้จาก localStorage
+  const saved = localStorage.getItem('planner_user_id');
+  if (saved && TEAM.find(p=>p.id===saved)) selectName(saved);
+}
+
+function selectName(id) {
+  document.querySelectorAll('.name-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.id === id);
+  });
+  document.getElementById('name-select').value = id;
+  document.getElementById('btn-enter').disabled = false;
+  document.getElementById('btn-enter').dataset.selected = id;
+}
+
+function enterApp() {
+  const id = document.getElementById('btn-enter').dataset.selected;
+  if (!id) return;
+  const person = TEAM.find(p=>p.id===id);
+  currentUser = person;
+  localStorage.setItem('planner_user_id', id);
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  const initials = currentUser.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  document.getElementById('user-avatar').textContent = initials;
-  document.getElementById('user-name').textContent = currentUser.name;
+  const initials = person.name.replace(/[^\w\u0E00-\u0E7F]/g,'').slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = person.name[0];
+  document.getElementById('user-name').textContent = person.name;
   loadData();
   renderWeek();
 }
 
+function switchUser() {
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
 // ============================================================
-// Google Sheets via Apps Script
+// Google Sheets (Apps Script)
 // ============================================================
 async function loadData() {
-  if (DEMO_MODE) { loadDemo(); return; }
   setSyncing(true);
   try {
-    const res = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=get&sheet=${CONFIG.SHEET_NAME}`);
+    const res = await fetch(APPS_SCRIPT_URL);
     const data = await res.json();
     if (data.values) {
       tasks = parseRows(data.values);
       renderWeek();
       showToast('โหลดข้อมูลสำเร็จ ✓');
+    } else {
+      showToast('ไม่พบข้อมูล — ตรวจสอบชื่อ sheet');
     }
   } catch(e) {
     console.error(e);
-    showToast('โหลดข้อมูลไม่สำเร็จ — ใช้ข้อมูล demo แทน');
-    loadDemo();
+    showToast('โหลดข้อมูลไม่สำเร็จ: ' + e.message);
   }
   setSyncing(false);
 }
 
 async function saveData() {
-  if (DEMO_MODE) { showToast('บันทึกแล้ว (Demo mode — ยังไม่มี Apps Script URL)'); return; }
   setSyncing(true);
   try {
     const values = [
       ['id','date','personId','name','status','md','note'],
-      ...tasks.map(t=>[t.id, t.date, t.personId, t.name, t.status, t.md||0, t.note||''])
+      ...tasks.map(t=>[t.id,t.date,t.personId,t.name,t.status,t.md||0,t.note||''])
     ];
-    const res = await fetch(CONFIG.APPS_SCRIPT_URL, {
+    await fetch(APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({action:'set', sheet:CONFIG.SHEET_NAME, values})
+      mode: 'no-cors',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({values})
     });
-    const data = await res.json();
-    showToast(data.status === 'ok' ? 'บันทึกลง Google Sheets แล้ว ✓' : 'บันทึกไม่สำเร็จ');
+    showToast('บันทึกแล้ว ✓');
+    // โหลดใหม่หลัง 1.5 วินาที เพื่อให้แน่ใจว่า Sheets อัปเดตแล้ว
+    setTimeout(loadData, 1500);
   } catch(e) {
     console.error(e);
     showToast('บันทึกไม่สำเร็จ: ' + e.message);
@@ -375,29 +352,14 @@ async function saveData() {
 function parseRows(values) {
   if (!values || values.length < 2) return [];
   return values.slice(1).map((r,i) => ({
-    id:     String(r[0]||i),
-    date:   String(r[1]||''),
+    id:       String(r[0]||i),
+    date:     String(r[1]||''),
     personId: String(r[2]||''),
-    name:   String(r[3]||''),
-    status: String(r[4]||'todo'),
-    md:     parseFloat(r[5])||0,
-    note:   String(r[6]||'')
-  })).filter(t => t.name && t.date);
-}
-
-function loadDemo() {
-  const d = (n) => { const x=new Date(); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); };
-  tasks = [
-    {id:'1',date:d(0), personId:'pu',  name:'KTC_Assignment Clear field',  status:'inprogress',md:1,   note:'ต่อจากวานนี้'},
-    {id:'2',date:d(0), personId:'pu',  name:'BPC Power app purchase',      status:'todo',      md:0.5, note:''},
-    {id:'3',date:d(0), personId:'le',  name:'Big Star F3 RP',              status:'done',      md:1,   note:'เสร็จแล้ว'},
-    {id:'4',date:d(1), personId:'dan', name:'THR Rework Assignment',       status:'inprogress',md:2,   note:''},
-    {id:'5',date:d(0), personId:'aim', name:'FCI Vendor account',          status:'inprogress',md:0.5, note:''},
-    {id:'6',date:d(0), personId:'aim', name:'BEVPRO MA Issue',             status:'todo',      md:0.25,note:'รอข้อมูลจาก client'},
-    {id:'7',date:d(-1),personId:'ae',  name:'BSCM PU01 Auto',             status:'blocked',   md:1,   note:'รอ UAT'},
-  ];
-  renderWeek();
-  if (DEMO_MODE) showToast('Demo mode — ใส่ APPS_SCRIPT_URL เพื่อเชื่อม Google Sheets');
+    name:     String(r[3]||''),
+    status:   String(r[4]||'todo'),
+    md:       parseFloat(r[5])||0,
+    note:     String(r[6]||'')
+  })).filter(t=>t.name&&t.date);
 }
 
 // ============================================================
@@ -416,127 +378,124 @@ const DAYS   = ['จันทร์','อังคาร','พุธ','พฤห
 const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 function renderWeek() {
-  const dates = getWeekDates(), today = fmtDate(new Date());
-  const m1=dates[0], m2=dates[6];
-  document.getElementById('week-label').textContent =
+  const dates=getWeekDates(), today=fmtDate(new Date());
+  const m1=dates[0],m2=dates[6];
+  document.getElementById('week-label').textContent=
     `${m1.getDate()} ${MONTHS[m1.getMonth()]} – ${m2.getDate()} ${MONTHS[m2.getMonth()]} ${m1.getFullYear()+543}`;
-  document.getElementById('topbar-month').textContent =
+  document.getElementById('topbar-month').textContent=
     `${MONTHS[m1.getMonth()]} ${m1.getFullYear()+543}`;
 
-  const tpl = `110px repeat(${TEAM.length},1fr)`;
-  let h = `<div class="grid-header-row" style="grid-template-columns:${tpl}">
-    <div class="gh-cell date-col">วัน</div>`;
-  TEAM.forEach(p => { h += `<div class="gh-cell">${p.name}</div>`; });
-  h += `</div>`;
+  const tpl=`110px repeat(${TEAM.length},1fr)`;
+  let h=`<div class="grid-header-row" style="grid-template-columns:${tpl}"><div class="gh-cell date-col">วัน</div>`;
+  TEAM.forEach(p=>{h+=`<div class="gh-cell">${p.name}</div>`;});
+  h+=`</div>`;
 
-  dates.forEach(date => {
-    const ds=fmtDate(date), isToday=ds===today;
-    const dow=date.getDay(), isWE=dow===0||dow===6, di=dow===0?6:dow-1;
-    h += `<div class="day-row${isToday?' today':isWE?' weekend':''}" style="grid-template-columns:${tpl}">
+  dates.forEach(date=>{
+    const ds=fmtDate(date),isToday=ds===today,dow=date.getDay(),isWE=dow===0||dow===6,di=dow===0?6:dow-1;
+    h+=`<div class="day-row${isToday?' today':isWE?' weekend':''}" style="grid-template-columns:${tpl}">
       <div class="date-cell">
         <div class="date-num">${date.getDate()}</div>
         <div class="date-day">${DAYS[di]}</div>
         ${isToday?'<div class="today-badge">วันนี้</div>':''}
       </div>`;
-    TEAM.forEach(person => {
-      const mine = person.id === currentUser?.id;
-      const dt = tasks.filter(t=>t.date===ds&&t.personId===person.id);
-      if (isWE) {
-        h += `<div class="person-cell" style="justify-content:center;align-items:center;">
-          <span style="font-size:10px;color:var(--text3)">หยุด</span></div>`;
+    TEAM.forEach(person=>{
+      const mine=person.id===currentUser?.id;
+      const dt=tasks.filter(t=>t.date===ds&&t.personId===person.id);
+      if(isWE){
+        h+=`<div class="person-cell" style="justify-content:center;align-items:center;"><span style="font-size:10px;color:var(--text3)">หยุด</span></div>`;
       } else {
-        h += `<div class="person-cell${mine?' mine':''}" onclick="openAddModal('${ds}','${person.id}')">`;
-        dt.forEach(t => {
-          h += `<div class="task-chip status-${t.status}" onclick="event.stopPropagation();openEditModal('${t.id}')">
+        h+=`<div class="person-cell${mine?' mine':''}" onclick="openAddModal('${ds}','${person.id}')">`;
+        dt.forEach(t=>{
+          h+=`<div class="task-chip status-${t.status}" onclick="event.stopPropagation();openEditModal('${t.id}')">
             <div class="chip-dot"></div>
             <div style="flex:1">
               <div class="chip-name">${escHtml(t.name)}</div>
               ${t.md?`<div class="chip-md">${t.md} MD${t.note?' · '+escHtml(t.note.slice(0,18)):''}</div>`:''}
             </div></div>`;
         });
-        h += `<div class="add-btn">+ เพิ่ม</div></div>`;
+        h+=`<div class="add-btn">+ เพิ่ม</div></div>`;
       }
     });
-    h += `</div>`;
+    h+=`</div>`;
   });
-  document.getElementById('planner-grid').innerHTML = h;
+  document.getElementById('planner-grid').innerHTML=h;
 }
 
 // ============================================================
 // Modal
 // ============================================================
-function openAddModal(ds, pid) {
-  if (!ds) { ds=fmtDate(new Date()); pid=currentUser?.id||TEAM[0].id; }
-  editingTask = null; modalContext = {date:ds, personId:pid};
-  const p=TEAM.find(x=>x.id===pid), d=new Date(ds+'T00:00:00');
-  document.getElementById('modal-title').textContent = 'เพิ่มงานใหม่';
-  document.getElementById('modal-sub').textContent =
+function openAddModal(ds,pid){
+  if(!ds){ds=fmtDate(new Date());pid=currentUser?.id||TEAM[0].id;}
+  editingTask=null; modalContext={date:ds,personId:pid};
+  const p=TEAM.find(x=>x.id===pid),d=new Date(ds+'T00:00:00');
+  document.getElementById('modal-title').textContent='เพิ่มงานใหม่';
+  document.getElementById('modal-sub').textContent=
     `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} | ${p?.name||pid}`;
-  document.getElementById('f-name').value = '';
-  document.getElementById('f-status').value = 'todo';
-  document.getElementById('f-md').value = '';
-  document.getElementById('f-note').value = '';
-  document.getElementById('btn-delete').style.display = 'none';
+  document.getElementById('f-name').value='';
+  document.getElementById('f-status').value='todo';
+  document.getElementById('f-md').value='';
+  document.getElementById('f-note').value='';
+  document.getElementById('btn-delete').style.display='none';
   document.getElementById('task-modal').classList.add('open');
   setTimeout(()=>document.getElementById('f-name').focus(),100);
 }
 
-function openEditModal(id) {
+function openEditModal(id){
   const t=tasks.find(x=>x.id===id); if(!t) return;
   editingTask=t;
-  const p=TEAM.find(x=>x.id===t.personId), d=new Date(t.date+'T00:00:00');
-  document.getElementById('modal-title').textContent = 'แก้ไขงาน';
-  document.getElementById('modal-sub').textContent =
+  const p=TEAM.find(x=>x.id===t.personId),d=new Date(t.date+'T00:00:00');
+  document.getElementById('modal-title').textContent='แก้ไขงาน';
+  document.getElementById('modal-sub').textContent=
     `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()+543} | ${p?.name||t.personId}`;
-  document.getElementById('f-name').value = t.name;
-  document.getElementById('f-status').value = t.status;
-  document.getElementById('f-md').value = t.md||'';
-  document.getElementById('f-note').value = t.note||'';
-  document.getElementById('btn-delete').style.display = 'block';
+  document.getElementById('f-name').value=t.name;
+  document.getElementById('f-status').value=t.status;
+  document.getElementById('f-md').value=t.md||'';
+  document.getElementById('f-note').value=t.note||'';
+  document.getElementById('btn-delete').style.display='block';
   document.getElementById('task-modal').classList.add('open');
 }
 
-function closeModal() { document.getElementById('task-modal').classList.remove('open'); }
+function closeModal(){document.getElementById('task-modal').classList.remove('open');}
 
-function saveTask() {
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { document.getElementById('f-name').focus(); return; }
-  const data = {
+function saveTask(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){document.getElementById('f-name').focus();return;}
+  const data={
     date:modalContext.date, personId:modalContext.personId, name,
     status:document.getElementById('f-status').value,
     md:parseFloat(document.getElementById('f-md').value)||0,
     note:document.getElementById('f-note').value.trim()
   };
-  if (editingTask) { Object.assign(editingTask, data); }
-  else { tasks.push({id:Date.now().toString(), ...data}); }
+  if(editingTask){Object.assign(editingTask,data);}
+  else{tasks.push({id:Date.now().toString(),...data});}
   closeModal(); renderWeek(); saveData();
 }
 
-function deleteTask() {
-  if (!editingTask) return;
-  if (!confirm('ลบงาน "'+editingTask.name+'" ?')) return;
-  tasks = tasks.filter(t=>t.id!==editingTask.id);
+function deleteTask(){
+  if(!editingTask) return;
+  if(!confirm('ลบงาน "'+editingTask.name+'" ?')) return;
+  tasks=tasks.filter(t=>t.id!==editingTask.id);
   closeModal(); renderWeek(); saveData();
 }
 
 function prevWeek(){weekOffset--;renderWeek();}
 function nextWeek(){weekOffset++;renderWeek();}
 function goToday(){weekOffset=0;renderWeek();}
-
-document.getElementById('task-modal').addEventListener('click',function(e){
-  if(e.target===this) closeModal();
-});
+document.getElementById('task-modal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function setSyncing(on){
   document.getElementById('sync-dot').classList.toggle('syncing',on);
-  document.getElementById('sync-label').textContent = on?'กำลังซิงค์...':'พร้อมใช้งาน';
+  document.getElementById('sync-label').textContent=on?'กำลังซิงค์...':'พร้อมใช้งาน';
 }
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),3000);
 }
+
+// เริ่มต้น
+initLoginScreen();
 </script>
 </body>
 </html>
