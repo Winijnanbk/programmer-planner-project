@@ -536,7 +536,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 // ─────────────────────────────────────────
 // CONFIG
 // ─────────────────────────────────────────
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrSnvPqorTnSqcVOvfYvJA7PPhHZ27mLF5_d3bZQf6q3IkHeLG1R6r8QFezmYFnmW1/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxQ1etAP5z5uOBQe7B95OiUvLBiTmlOVQU4YaZCsaWl7td3QOpDGtpyYhw_qRo5bWRW/exec';
 
 const TEAM = [
   {id:'pu',   name:'PU',       emoji:'😎'},
@@ -646,37 +646,35 @@ function switchPage(page, el) {
 // ─────────────────────────────────────────
 // DATA
 // ─────────────────────────────────────────
-async function loadData(manual=false) {
+function loadData(manual=false) {
   setSyncing(true);
-  try {
-    const res = await fetch(APPS_SCRIPT_URL + '?t=' + Date.now());
-    const data = await res.json();
-    if (data.values) {
-      tasks = parseRows(data.values);
-      renderWeek();
-      if (currentPage==='dashboard') renderDashboard();
-      if (manual) showToast('โหลดข้อมูลสำเร็จ ✓');
-    } else { showToast('ไม่พบข้อมูล — ตรวจสอบชื่อ sheet "Planner"'); }
-  } catch(e) { console.error(e); showToast('โหลดไม่สำเร็จ'); }
-  setSyncing(false);
-}
-
-async function saveData() {
-  setSyncing(true);
-  try {
-    const vals = [
-      ['id','date','personId','name','status','md','note','type'],
-      ...tasks.map(t=>[t.id,t.date,t.personId,t.name,t.status,t.md||0,t.note||'',t.type||'normal'])
-    ];
-    await fetch(APPS_SCRIPT_URL, {
-      method:'POST', mode:'no-cors',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({values:vals})
-    });
-    showToast('บันทึกแล้ว ✓');
-    setTimeout(()=>loadData(), 1500);
-  } catch(e) { showToast('บันทึกไม่สำเร็จ'); }
-  setSyncing(false);
+  return new Promise((resolve) => {
+    const cb = 'gs_' + Date.now();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      delete window[cb]; script.remove();
+      showToast('โหลดไม่สำเร็จ — ตรวจสอบ Apps Script');
+      setSyncing(false); resolve();
+    }, 12000);
+    window[cb] = function(data) {
+      clearTimeout(timer); delete window[cb]; script.remove();
+      if (data && data.values) {
+        tasks = parseRows(data.values);
+        renderWeek();
+        if (currentPage==='dashboard') renderDashboard();
+        if (manual) showToast('โหลดข้อมูลสำเร็จ ✓');
+      } else {
+        showToast('ไม่พบข้อมูล — ตรวจสอบชื่อ sheet "Planner"');
+      }
+      setSyncing(false); resolve();
+    };
+    script.src = APPS_SCRIPT_URL + '?callback=' + cb + '&t=' + Date.now();
+    script.onerror = () => {
+      clearTimeout(timer); delete window[cb];
+      showToast('โหลดไม่สำเร็จ'); setSyncing(false); resolve();
+    };
+    document.head.appendChild(script);
+  });
 }
 
 function parseRows(values) {
