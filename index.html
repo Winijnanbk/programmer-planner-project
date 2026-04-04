@@ -948,6 +948,24 @@ function checkSiteConflict() {
   warn.style.display='block';
 }
 
+async function saveData() {
+  setSyncing(true);
+  try {
+    const vals = [
+      ['id','date','personId','name','status','md','note','type'],
+      ...tasks.map(t=>[t.id,t.date,t.personId,t.name,t.status,t.md||0,t.note||'',t.type||'normal'])
+    ];
+    await fetch(APPS_SCRIPT_URL, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({values:vals})
+    });
+    showToast('บันทึกแล้ว ✓');
+    setTimeout(()=>loadData(), 1500);
+  } catch(e) { showToast('บันทึกไม่สำเร็จ'); }
+  setSyncing(false);
+}
+
 function closeModal(){document.getElementById('task-modal').classList.remove('open');}
 
 function saveTask(){
