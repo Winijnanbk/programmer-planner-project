@@ -36,7 +36,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
   font-weight:800;color:rgba(255,255,255,0.022);font-family:'IBM Plex Mono',monospace;
   letter-spacing:-12px;line-height:1;pointer-events:none}
 .lc{background:var(--white);border-radius:18px;padding:34px 30px;width:100%;
-  max-width:480px;box-shadow:0 32px 90px rgba(0,0,0,0.35);position:relative;z-index:1}
+  max-width:440px;box-shadow:0 32px 90px rgba(0,0,0,0.35);position:relative;z-index:1}
 .lb{display:flex;align-items:center;gap:10px;margin-bottom:22px}
 .li{width:36px;height:36px;background:var(--navy);border-radius:8px;
   display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -46,7 +46,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 .lt{font-size:19px;font-weight:800;color:var(--navy);letter-spacing:-0.4px;margin-bottom:3px}
 .ls2{font-size:12px;color:var(--text2);margin-bottom:18px}
 .lsl{font-size:9px;font-weight:800;color:var(--text3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:7px}
-.ng{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.ng{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
 @media(max-width:400px){.ng{grid-template-columns:repeat(3,1fr)}}
 .nb{padding:7px 3px;border-radius:var(--r);border:1.5px solid var(--g200);background:var(--white);
   font-size:10px;font-weight:700;cursor:pointer;transition:all 0.12s;color:var(--text2);
@@ -71,7 +71,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 #app{display:none;flex-direction:column;min-height:100vh}
 
 /* TOPBAR */
-.tb{background:var(--navy);height:52px;padding:0 14px;display:flex;align-items:center;
+.tb{background:var(--navy);height:54px;padding:0 16px;display:flex;align-items:center;
   justify-content:space-between;position:sticky;top:0;z-index:200;
   box-shadow:0 2px 18px rgba(0,0,0,0.28)}
 .tbl{display:flex;align-items:center;gap:8px}
@@ -153,10 +153,10 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
   .pw{padding:8px 8px 80px}
   .pgrid{min-width:unset !important;border-radius:var(--r)}
   .gh-cell:not(.date-col):not(.mine-col){display:none}
-  .person-cell:not(.mine):not(.off){display:none}
+  .pc:not(.mine):not(.off){display:none}
   /* Show all on mobile toggle */
   .pgrid.show-all .gh-cell{display:block}
-  .pgrid.show-all .person-cell{display:flex}
+  .pgrid.show-all .pc{display:flex}
   .pgrid.show-all{overflow-x:auto;min-width:700px !important}
 }
 
@@ -202,7 +202,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 
 /* TASK CHIPS — more contrast */
 .chip{display:flex;align-items:flex-start;gap:3px;border-radius:5px;
-  padding:4px 5px;font-size:10px;line-height:1.35;
+  padding:4px 5px;font-size:10.5px;line-height:1.35;
   border:1.5px solid var(--g200);cursor:pointer;transition:all 0.1s;
   background:var(--g100)}
 .chip:hover{filter:brightness(0.95);border-color:var(--blue)}
@@ -224,7 +224,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 .t-meeting .cdot{background:var(--c-meet-dot)!important}
 .t-ma .cdot{background:var(--c-ma-dot)!important}
 .cbody{flex:1;min-width:0}
-.cname{color:var(--text);font-weight:700;word-break:break-word;font-size:10px}
+.cname{color:var(--text);font-weight:700;word-break:break-word;font-size:10.5px}
 .cfoot{display:flex;gap:3px;align-items:center;flex-wrap:wrap;margin-top:2px}
 .ctag{padding:1px 4px;border-radius:3px;font-size:8px;font-weight:800;letter-spacing:0.2px;flex-shrink:0}
 .tla{background:var(--c-leave-dot);color:white}
@@ -292,7 +292,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 @media(min-width:560px){.mo{border-radius:var(--rl);box-shadow:var(--sh3)}}
 .mh{width:32px;height:4px;background:var(--g200);border-radius:2px;margin:0 auto 12px}
 @media(min-width:560px){.mh{display:none}}
-.mt{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:2px}
+.mt{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:2px}
 .ms{font-size:10px;color:var(--text3);margin-bottom:14px}
 .fg{margin-bottom:10px}
 .fl{font-size:9.5px;font-weight:800;color:var(--text2);letter-spacing:0.5px;
