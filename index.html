@@ -556,7 +556,7 @@ function isMA(name) {
 
 // ══ STATE ══
 let me=null, tasks=[], editing=null;
-let mCtx={date:null,pid:null}, selType='normal';
+let mCtx={date:null,pid:null};
 let wOff=0, curPage='planner', mobileAll=false;
 
 // ══ LOGIN ══
@@ -810,15 +810,6 @@ function renderDashboard() {
 }
 
 // ══ MODAL ══
-function selType(type,el) {
-  selType=type; // reassign state var
-  selType=type;
-  document.querySelectorAll('.tbtn').forEach(b=>{
-    b.className='tbtn';
-    if(b.dataset.type===type) b.className=`tbtn s${type[0]}2`;
-  });
-}
-// Fix: selType is both fn and var, rename
 let _selType='normal';
 function selType(type,el) {
   _selType=type;
