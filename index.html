@@ -145,7 +145,7 @@ body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--g50);color:var
 .pw{overflow-x:auto;padding:10px 10px 80px;-webkit-overflow-scrolling:touch}
 
 /* Sticky first column on mobile */
-.pgrid{display:grid;border-radius:var(--rm);overflow:hidden;
+.pgrid{display:block;border-radius:var(--rm);overflow:hidden;
   border:2px solid var(--g200);box-shadow:var(--sh2)}
 
 /* Mobile: show only current user column + date */
@@ -731,7 +731,7 @@ function renderWeek() {
   });
 
   const g=document.getElementById('pgrid');
-  g.style.gridTemplateColumns=tpl;
+  g.style.gridTemplateColumns='';
   g.style.minWidth=`${78+TEAM.length*100}px`;
   g.innerHTML=h;
   if(mobileAll) g.classList.add('show-all');
